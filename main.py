@@ -225,7 +225,7 @@ def generate_tiles():
     return tiles
 
 
-def main(window):
+def main(window=WINDOW):
     clock = pygame.time.Clock()
     run = True
 
