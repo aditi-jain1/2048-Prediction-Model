@@ -13,6 +13,14 @@ import random
 WIDTH, HEIGHT = 800, 800
 WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("2048")
+WEIGHTS = {
+        'empty_tiles': 1.0,
+        'max_tile': 1.0,
+        'smoothness': 0.5,
+        'monotonicity': 5,
+        'corner_max': 20.0,
+        'merge_penalty': 0.2,
+    }
 
 def create_grid():
     return [[0] * 4 for _ in range(4)]
@@ -21,7 +29,9 @@ def spawn_tile(grid):
     empty_tiles = [(r, c) for r in range(4) for c in range(4) if grid[r][c] == 0]
     if empty_tiles:
         r, c = random.choice(empty_tiles)
-        grid[r][c] = 2 if random.random() < 0.9 else 4
+        val =  2 if random.random() < 0.9 else 4
+        grid[r][c] = val
+    return r, c, val
 
 def print_grid(grid):
     for row in grid:
@@ -74,28 +84,35 @@ def move(grid, direction):
         grid = move_left(grid)
     return grid
 
-def heuristic(grid):
-    weights = {
-        'empty_tiles': 1.0,
-        'max_tile': 1.0,
-        'smoothness': 0.5,
+def heuristic(grid, weights=WEIGHTS):
+
+    normalization = {
+        'empty_tiles': 1,
+        'max_tile': .05,
+        'smoothness': 0.025,
         'monotonicity': 1.5,
-        'corner_max': 5.0,
-        'merge_penalty': 0.2,
+        'corner_max': .1,
+        'merge_penalty': .7,
     }
 
     score = (
-        weights['empty_tiles'] * count_empty_tiles(grid)
-        + weights['max_tile'] * max_tile(grid)
-        + weights['smoothness'] * smoothness(grid)
-        + weights['monotonicity'] * monotonicity(grid)
-        + weights['corner_max'] * corner_max(grid)
-        + weights['merge_penalty'] * merge_penalty(grid)
+        weights['empty_tiles'] * normalization['empty_tiles'] * count_empty_tiles(grid)
+        + weights['max_tile'] * normalization['max_tile'] * max_tile(grid)
+        + weights['smoothness'] * normalization['smoothness'] * smoothness(grid)
+        + weights['monotonicity'] * normalization['monotonicity'] * monotonicity(grid)
+        + weights['corner_max'] * normalization['corner_max'] * corner_max(grid)
+        + weights['merge_penalty'] * normalization['merge_penalty'] * merge_penalty(grid)
     )
+    print(weights['empty_tiles'] * normalization['empty_tiles'] * count_empty_tiles(grid)
+        , weights['max_tile'] * normalization['max_tile'] * max_tile(grid)
+        , weights['smoothness'] * normalization['smoothness'] * smoothness(grid)
+        , weights['monotonicity'] * normalization['monotonicity'] * monotonicity(grid)
+        , weights['corner_max'] * normalization['corner_max'] * corner_max(grid)
+        , weights['merge_penalty'] * normalization['merge_penalty'] * merge_penalty(grid))
     return score
 
 
-def best_move(grid):
+def best_move(grid, weights=WEIGHTS):
     moves = ['up', 'down', 'left', 'right']
     best_score = -1
     best_direction = None
@@ -103,7 +120,7 @@ def best_move(grid):
     for move_dir in moves:
         new_grid = move([row[:] for row in grid], move_dir)
         if new_grid != grid:  # Check if the move changes the grid
-            score = heuristic(new_grid)
+            score = heuristic(new_grid, weights)
             if score > best_score:
                 best_score = score
                 best_direction = move_dir         
@@ -128,7 +145,7 @@ def is_game_over(grid):
 
     return True
 
-def best_move_with_lookahead(grid):
+def best_move_with_lookahead(grid, weights=WEIGHTS):
     moves = ['up', 'down', 'left', 'right']
     best_score = -float('inf')
     best_direction = None
@@ -140,7 +157,7 @@ def best_move_with_lookahead(grid):
             continue
 
         # Evaluate the first move's immediate score
-        immediate_score = heuristic(new_grid1)
+        immediate_score = heuristic(new_grid1, weights)
 
         # Look ahead to the second move
         max_second_score = -float('inf')
@@ -158,7 +175,7 @@ def best_move_with_lookahead(grid):
 
     return best_direction
 
-def best_move_with_n_lookahead(grid, n):
+def best_move_with_n_lookahead(grid, n, weights=WEIGHTS):
     moves = ['up', 'down', 'left', 'right']
     best_score = -float('inf')
     best_direction = None
@@ -170,7 +187,7 @@ def best_move_with_n_lookahead(grid, n):
             continue
 
         # Evaluate this move recursively up to depth `n`
-        score = lookahead_score(new_grid, n - 1)
+        score = lookahead_score(new_grid, n - 1, weights)
         if score > best_score:
             best_score = score
             best_direction = move_dir
@@ -178,9 +195,9 @@ def best_move_with_n_lookahead(grid, n):
     return best_direction
 
 
-def lookahead_score(grid, depth):
+def lookahead_score(grid, depth, weights=WEIGHTS):
     if depth == 0 or is_game_over(grid):
-        return heuristic(grid)
+        return heuristic(grid, weights)
 
     moves = ['up', 'down', 'left', 'right']
     max_score = -float('inf')
@@ -189,7 +206,7 @@ def lookahead_score(grid, depth):
         # Simulate the move
         new_grid = move([row[:] for row in grid], move_dir)
         if new_grid != grid:  # Only consider moves that change the grid
-            score = lookahead_score(new_grid, depth - 1)
+            score = lookahead_score(new_grid, depth - 1, weights)
             max_score = max(max_score, score)
 
     return max_score
@@ -200,7 +217,6 @@ def main(window=WINDOW):
     run = True
 
     tiles = generate_tiles()
-
     while run:
         clock.tick(FPS)
 
@@ -215,7 +231,7 @@ def main(window=WINDOW):
             grid[tile.row][tile.col] = tile.value
 
         # Get the best move from the AI
-        direction = best_move_with_n_lookahead(grid, 1)
+        direction = best_move(grid, WEIGHTS)
 
         if direction is None:
             max_tile = max(max(row) for row in grid)
@@ -224,12 +240,8 @@ def main(window=WINDOW):
             break
 
         # Execute the AI's move
-        status = move_tiles(window, tiles, clock, direction)
-        if status == "lost":
-            max_tile = max(max(row) for row in grid)
-            print(max_tile)
-            print("Game Over!")
-            break
+        move_tiles(window, tiles, clock, direction)
+        end_move(tiles)
 
         draw(window, tiles)
 

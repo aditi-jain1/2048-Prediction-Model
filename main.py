@@ -196,7 +196,6 @@ def move_tiles(window, tiles, clock, direction):
 
         update_tiles(window, tiles, sorted_tiles)
 
-    return end_move(tiles)
 
 
 def end_move(tiles):
@@ -242,12 +241,16 @@ def main(window=WINDOW):
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
                     move_tiles(window, tiles, clock, "left")
+                    end_move(tiles)
                 if event.key == pygame.K_RIGHT:
                     move_tiles(window, tiles, clock, "right")
+                    end_move(tiles)
                 if event.key == pygame.K_UP:
                     move_tiles(window, tiles, clock, "up")
+                    end_move(tiles)
                 if event.key == pygame.K_DOWN:
                     move_tiles(window, tiles, clock, "down")
+                    end_move(tiles)
 
         draw(window, tiles)
 
