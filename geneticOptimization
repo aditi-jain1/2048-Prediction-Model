@@ -1,0 +1,169 @@
+import random
+import json
+from copy import deepcopy
+from testmodel import *
+
+class SimpleGeneticOptimizer:
+    def __init__(self, population_size=20, mutation_rate=0.1):
+        self.population_size = population_size
+        self.mutation_rate = mutation_rate
+        self.weight_ranges = {
+            'empty_tiles': (0, 20),
+            'max_tile': (0, 5),
+            'smoothness': (0, 10),
+            'monotonicity': (0, 20),
+            'corner_max': (0, 15),
+            'merge_penalty': (0, 5)
+        }
+    
+    def create_individual(self):
+        """Create a random set of weights"""
+        return {
+            key: random.uniform(min_val, max_val) 
+            for key, (min_val, max_val) in self.weight_ranges.items()
+        }
+    
+    def initialize_population(self):
+        """Create initial population"""
+        return [self.create_individual() for _ in range(self.population_size)]
+
+    def evaluate_fitness(self, weights, num_games=3):
+        """Evaluate weights by playing multiple games"""
+        scores = []
+        max_tiles = []
+        
+        for _ in range(num_games):
+            score, max_val = self.play_game(weights)
+            scores.append(score)
+            max_tiles.append(max_val)
+        
+        avg_score = sum(scores) / len(scores)
+        avg_max_tile = sum(max_tiles) / len(max_tiles)
+        
+        return avg_score * 0.3 + avg_max_tile * 0.7
+
+    def play_game(self, weights):
+        """Play a single game with given weights"""
+        grid = [[0] * 4 for _ in range(4)]
+        spawn_tile(grid)
+        spawn_tile(grid)
+        
+        move_count = 0
+        max_moves = 500  # Prevent infinite games
+        
+        while move_count < max_moves:
+            old_grid = [row[:] for row in grid]
+            
+            # Use your existing best_move function with the current weights
+            direction = best_move(grid, weights)
+            if direction is None:
+                break
+                
+            grid = move(grid, direction)
+            if grid == old_grid:
+                break
+            
+            spawn_tile(grid)
+            move_count += 1
+        
+        return self.calculate_score(grid), max_tile(grid)
+
+    def calculate_score(self, grid):
+        """Calculate score based on tile values and positions"""
+        score = 0
+        for i in range(4):
+            for j in range(4):
+                if grid[i][j] != 0:
+                    # Give bonus for high values in corners
+                    corner_bonus = 2 if (i in [0, 3] and j in [0, 3]) else 1
+                    score += grid[i][j] * corner_bonus
+        return score
+
+    def crossover(self, parent1, parent2):
+        """Create child by combining parents"""
+        child = {}
+        for key in parent1.keys():
+            # Randomly choose which parent's weight to use
+            if random.random() < 0.5:
+                child[key] = parent1[key]
+            else:
+                child[key] = parent2[key]
+        return child
+
+    def mutate(self, weights):
+        """Randomly modify weights"""
+        mutated = weights.copy()
+        for key in mutated:
+            if random.random() < self.mutation_rate:
+                min_val, max_val = self.weight_ranges[key]
+                # Add or subtract up to 20% of the possible range
+                change = random.uniform(-0.2, 0.2) * (max_val - min_val)
+                mutated[key] = max(min_val, min(max_val, mutated[key] + change))
+        return mutated
+
+    def select_parent(self, population, fitness_scores):
+        """Select parent using tournament selection"""
+        tournament_size = 3
+        tournament_indices = random.sample(range(len(population)), tournament_size)
+        tournament_fitness = [(fitness_scores[i], i) for i in tournament_indices]
+        _, selected_idx = max(tournament_fitness)
+        return population[selected_idx]
+
+    def optimize(self, generations=20):
+        """Run genetic algorithm"""
+        population = self.initialize_population()
+        best_fitness = float('-inf')
+        best_weights = None
+        
+        for generation in range(generations):
+            # Evaluate all individuals
+            fitness_scores = []
+            for weights in population:
+                fitness = self.evaluate_fitness(weights)
+                fitness_scores.append(fitness)
+            
+            # Track best performing weights
+            max_fitness_idx = fitness_scores.index(max(fitness_scores))
+            if fitness_scores[max_fitness_idx] > best_fitness:
+                best_fitness = fitness_scores[max_fitness_idx]
+                best_weights = population[max_fitness_idx].copy()
+                
+                # Save best weights
+                with open(f'best_weights_gen_{generation}.json', 'w') as f:
+                    json.dump(best_weights, f)
+                
+                print(f"Generation {generation}: Best Fitness = {best_fitness}")
+                print("Best weights:", best_weights)
+            
+            # Create new population
+            new_population = [best_weights.copy()]  # Keep best individual
+            
+            while len(new_population) < self.population_size:
+                parent1 = self.select_parent(population, fitness_scores)
+                parent2 = self.select_parent(population, fitness_scores)
+                child = self.crossover(parent1, parent2)
+                child = self.mutate(child)
+                new_population.append(child)
+            
+            population = new_population
+        
+        return best_weights
+
+# Function to run optimization
+def run_optimization():
+    print("Starting weight optimization...")
+    optimizer = SimpleGeneticOptimizer(population_size=20, mutation_rate=0.1)
+    best_weights = optimizer.optimize(generations=20)
+    
+    print("\nOptimization complete!")
+    print("Best weights found:", best_weights)
+    
+    # Save final weights
+    with open('final_best_weights.json', 'w') as f:
+        json.dump(best_weights, f)
+    
+    return best_weights
+
+if __name__ == "__main__":
+    best_weights = run_optimization()
+    print(best_weights)

@@ -13,7 +13,7 @@ WEIGHTOPTIONS = {
 all_combinations = list(product(*WEIGHTOPTIONS.values()))
 print(len(all_combinations))
 print(all_combinations[1])
-'''
+
 def simulate_game(weights):
     grid = create_grid()
     spawn_tile(grid)  
@@ -41,7 +41,7 @@ def simulate_game(weights):
         end_move(tiles)
     max_tile = max(max(row) for row in grid)
     return max_tile
-
+'''
 
 
 
@@ -60,7 +60,7 @@ for combination in all_combinations:
     }
 
     #print(f"Testing weights: {weights}")
-    scores = [simulate_game(weights) for _ in range(1)]  # Simulate multiple games
+    scores = [simulate_game(weights) for _ in range(4)]  # Simulate multiple games
     average_score = sum(scores) / len(scores)
     print(str(i) + "/" + str(len(all_combinations)) + str(average_score))
     results.append((weights, average_score))
@@ -77,25 +77,4 @@ print(f"Best Average Score: {best_score}")
 
 
 
-def simulate_game(weights):
-
-    tiles = generate_tiles()
-    grid = get_grid(tiles)
-    while not is_game_over(grid):
-
-        # Create a grid representation for the AI
-        grid = get_grid(tiles)
-
-        # Get the best move from the AI
-        direction = best_move_with_n_lookahead(grid, 5, WEIGHTS)
-
-        if direction is None:
-            max_tile = max(max(row) for row in grid)
-            print(max_tile)
-            print("Game Over!")
-            break
-
-        # Execute the AI's move
-        move_tiles_immediate(window, tiles, direction)
-        end_move(tiles)
 

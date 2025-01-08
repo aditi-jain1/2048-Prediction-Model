@@ -13,14 +13,7 @@ import random
 WIDTH, HEIGHT = 800, 800
 WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("2048")
-WEIGHTS = {
-    'empty_tiles': 10,    # Increased to encourage keeping spaces open
-    'max_tile': 2.0,      # Reward higher values
-    'smoothness': 4.0,    # Increased to encourage mergeable tiles
-    'monotonicity': 8.0,  # Reduced but still important
-    'corner_max': 5.0,    # Keeping high values in corners
-    'merge_penalty': 1.0  # Reduced penalty for different adjacent tiles
-}
+WEIGHTS ={'empty_tiles': 0, 'max_tile': 0.5, 'smoothness': 1, 'monotonicity': 0, 'corner_max': 30, 'merge_penalty': 0}
 
 def create_grid():
     return [[0] * 4 for _ in range(4)]
@@ -297,6 +290,7 @@ def main(window=WINDOW):
 
     tiles = generate_tiles()
     grid = get_grid(tiles)
+
     while run:
         clock.tick(FPS)
 
@@ -309,7 +303,7 @@ def main(window=WINDOW):
         grid = get_grid(tiles)
 
         # Get the best move from the AI
-        direction = best_move_with_expectimax(grid, depth=3)
+        direction =  best_move_with_n_lookahead(grid, 3, WEIGHTS)
         if direction is None:
             max_tile = max(max(row) for row in grid)
             print(max_tile)
@@ -317,11 +311,11 @@ def main(window=WINDOW):
             break
 
         # Execute the AI's move
-        move_tiles(window, tiles, clock, direction)
+        move_tiles_immediate(tiles, direction)
         end_move(tiles)
 
         draw(window, tiles)
 
     pygame.quit()
 
-main()
+#main()
