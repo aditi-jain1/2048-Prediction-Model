@@ -65,7 +65,7 @@ def heuristic(grid, weights):
     normalization = {
         'empty_tiles': 1,   # Scale for 0-16 empty tiles
         'max_tile': 1,    # Scale for potentially large numbers
-        'smoothness': 1,    # Adjusted for typical smoothness values
+        'smoothness': .1,    # Adjusted for typical smoothness values
         'monotonicity': 1,  # Scale for 0-8 monotonic lines
         'corner_max': 1,  # Scale for high value tiles
         'merge_penalty': 1,  # Scale for typical penalty values
@@ -87,12 +87,13 @@ def heuristic(grid, weights):
         if grid[0][0] != max_val and grid[0][3] != max_val and grid[3][0] != max_val and grid[3][3] != max_val:  # If max value isn't in top corners
             score *= 0.8  # Apply penalty
 
-    '''
+    
     print(weights['empty_tiles'] * normalization['empty_tiles'] * count_empty_tiles(grid)
         , weights['max_tile'] * normalization['max_tile'] * max_tile(grid)
         , weights['smoothness'] * normalization['smoothness'] * smoothness(grid)
         , weights['monotonicity'] * normalization['monotonicity'] * monotonicity(grid)
         , weights['corner_max'] * normalization['corner_max'] * corner_max(grid)
-        , weights['merge_penalty'] * normalization['merge_penalty'] * merge_penalty(grid))
-    '''
+        , weights['merge_penalty'] * normalization['merge_penalty'] * merge_penalty(grid)
+        , weights['snake_pattern'] * normalization['snake_pattern'] * snake_pattern_bonus(grid))
+    
     return score

@@ -30,6 +30,4 @@ def simulate_game(weights):
     max_tile = max(max(row) for row in grid)
     return max_tile
 
-simulate_game([ [1, 2, 3],
-  [4, 5, 6],
-  [7, 8, 9] ])
+simulate_game()
