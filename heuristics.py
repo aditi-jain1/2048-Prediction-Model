@@ -63,7 +63,7 @@ def snake_pattern_bonus(grid):
 
 def heuristic(grid, weights):
     normalization = {
-        'empty_tiles': 1,   # Scale for 0-16 empty tiles
+        'empty_tiles': 10,   # Scale for 0-16 empty tiles
         'max_tile': 1,    # Scale for potentially large numbers
         'smoothness': .1,    # Adjusted for typical smoothness values
         'monotonicity': 1,  # Scale for 0-8 monotonic lines

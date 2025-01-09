@@ -28,4 +28,4 @@ def gameloop(gameType, modelType):
     print("GAME OVER")
 
 
-gameloop("ai", "best_move")
+gameloop("ai", "lookahead")
