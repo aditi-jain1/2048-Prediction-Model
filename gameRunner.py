@@ -22,10 +22,11 @@ def gameloop(gameType, modelType):
         moves = {1: "up", 2: "right", 3: "down", 4: "left"}
         board_before_move = [row[:] for row in board]
         board = move(board, moves[int(playerInput)])
+        print(moves[int(playerInput)])
         if board != board_before_move:
             board = generateNewTile(board)
     printBoard(board)
     print("GAME OVER")
 
 
-gameloop("ai", "lookahead")
+gameloop("ai", "expectimax")

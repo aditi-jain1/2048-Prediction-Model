@@ -1,4 +1,5 @@
 import math
+import copy 
 def count_empty_tiles(grid):
     return sum(row.count(0) for row in grid)
 
@@ -47,19 +48,26 @@ def merge_penalty(grid):
     return -penalty
 
 def snake_pattern_bonus(grid):
+    def rotateClockwise(board):
+        return [list(x) for x in list(zip(*board[::-1]))]
+    grid = copy.deepcopy(grid)
     score = 0
+    max_score = 0
     # Check snake pattern: top row left to right, second row right to left, etc.
-    pattern_multiplier = 1.0
-    for r in range(len(grid)):
-        row = grid[r] if r % 2 == 0 else grid[r][::-1]
-        prev = None
-        for val in row:
-            if prev is not None and val != 0:
-                if val >= prev:
-                    score += math.log2(val) * pattern_multiplier
-            prev = val
-        pattern_multiplier *= 0.5  # Lower rows are less important
-    return score
+    for i in range(4):
+        pattern_multiplier = 1.0
+        for r in range(len(grid)):
+            row = grid[r] if r % 2 == 0 else grid[r][::-1]
+            prev = None
+            for val in row:
+                if prev is not None and val != 0:
+                    if val >= prev:
+                        score += math.log2(val) * pattern_multiplier
+                prev = val
+            pattern_multiplier *= 0.5  # Lower rows are less important
+        max_score = max(max_score, score)
+        grid = rotateClockwise(grid)
+    return max_score
 
 def heuristic(grid, weights):
     normalization = {
@@ -87,7 +95,7 @@ def heuristic(grid, weights):
         if grid[0][0] != max_val and grid[0][3] != max_val and grid[3][0] != max_val and grid[3][3] != max_val:  # If max value isn't in top corners
             score *= 0.8  # Apply penalty
 
-    
+    '''
     print(weights['empty_tiles'] * normalization['empty_tiles'] * count_empty_tiles(grid)
         , weights['max_tile'] * normalization['max_tile'] * max_tile(grid)
         , weights['smoothness'] * normalization['smoothness'] * smoothness(grid)
@@ -95,5 +103,5 @@ def heuristic(grid, weights):
         , weights['corner_max'] * normalization['corner_max'] * corner_max(grid)
         , weights['merge_penalty'] * normalization['merge_penalty'] * merge_penalty(grid)
         , weights['snake_pattern'] * normalization['snake_pattern'] * snake_pattern_bonus(grid))
-    
+    '''
     return score
