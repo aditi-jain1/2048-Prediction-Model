@@ -3,23 +3,17 @@ import numpy as np
 import copy
 import random
 
-WEIGHTS = {'empty_tiles': 1, 
-            'max_tile': 1, 
-            'smoothness': 1, 
-            'monotonicity': 1, 
-            'corner_max': 1, 
-            'merge_penalty': 1,
-            'snake_pattern': 1}
+WEIGHTS = {'empty_tiles': 1, 'max_tile': 1.5, 'smoothness': 0.5, 'monotonicity': 1, 'corner_max': 0.5, 'merge_penalty': 1, 'snake_pattern': 0.5}
 
 N = 4
 DEPTH = 4
-def applyModel(grid, modelType, move_function, isGameOver_fucntion):
+def applyModel(grid, modelType, move_function, isGameOver_fucntion, weights=WEIGHTS):
     if modelType == "best_move":
-        return best_move(grid, WEIGHTS, move_function, isGameOver_fucntion)
+        return best_move(grid, weights, move_function, isGameOver_fucntion)
     if modelType == "lookahead":
-        return best_move_with_lookahead(grid, WEIGHTS, move_function)
+        return best_move_with_lookahead(grid, weights, move_function)
     if modelType == "nlookahead":
-        return best_move_with_n_lookahead(grid, N, WEIGHTS, move_function, isGameOver_fucntion)
+        return best_move_with_n_lookahead(grid, N, weights, move_function, isGameOver_fucntion)
     if modelType == "expectimax":
         move_map = {'up': 1, 'right': 2, 'down': 3, 'left': 4}
         valid_moves = []
@@ -28,10 +22,9 @@ def applyModel(grid, modelType, move_function, isGameOver_fucntion):
             new_grid = move_function(test_grid, move)
             if new_grid != test_grid:
                 valid_moves.append(move)
-                print(valid_moves)
         if not valid_moves:
             return random.choice([1, 2, 3, 4])
-        best_move, _ = expectimax(grid, WEIGHTS, DEPTH, move_function, isGameOver_fucntion, True)
+        best_move, _ = expectimax(grid, weights, DEPTH, move_function, isGameOver_fucntion, True)
         if best_move is None:
             print("No move found by expectimax, choosing random valid move")
             return move_map[random.choice(valid_moves)]
@@ -139,7 +132,7 @@ def expectimax(grid, weights, depth, move_function, isGameOver_function, is_play
             new_grid = move_function([row[:] for row in grid], move)
             if new_grid == grid:
                 continue
-            _, score = expectimax(new_grid, WEIGHTS, depth - 1, move_function, isGameOver_function, False)
+            _, score = expectimax(new_grid, weights, depth - 1, move_function, isGameOver_function, False)
 
             if score > best_score:
                 best_score = score
@@ -153,7 +146,7 @@ def expectimax(grid, weights, depth, move_function, isGameOver_function, is_play
             return None, heuristic(grid, weights)
         expected_score = 0
         for new_grid, probability in possibilities:
-            _, score = expectimax(new_grid, WEIGHTS, depth - 1, move_function, isGameOver_function, True)
+            _, score = expectimax(new_grid, weights, depth - 1, move_function, isGameOver_function, True)
             expected_score += score * probability
         return None, expected_score
 
