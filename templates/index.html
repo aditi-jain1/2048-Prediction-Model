@@ -22,52 +22,101 @@
         .array-row {
             margin-bottom: 10px;
         }
+        #game-over {
+            margin-top: 20px;
+            font-size: 24px;
+            color: red;
+        }
+        #buttons-container {
+            margin-top: 20px;
+        }
+        #restartGame {
+            display: none;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
-    <h1>Random 4x4 Array Generator</h1>
-    <button id="getArray">Get Random 4x4 Array</button>
-    <button id="add1" disabled>Add 1 to Array</button>
+    <h1>2048</h1>
+    <div id="buttons-container">
+        <button id="best_move">Best Move</button>
+        <button id="lookahead">Lookahead</button>
+        <button id="nlookahead">N Lookahead</button>
+        <button id="expectimax">Expectimax</button>
+    </div>
     <div id="array"></div>
+    <div id="game-over" style="display: none;">
+        <p>Game Over!</p>
+    </div>
+    
+    <button id="restartGame" style="display: none;">Restart Game</button>
 
     <script>
         let currentArray = null;
+        let processInterval = null;
+        let addValue = ''; // Store the value to be added to each element as a string
 
-        document.getElementById('getArray').addEventListener('click', () => {
+        // Function to handle the button click for adding 1, 2, 3, or 4
+        function handleAddButtonClick(value) {
+            addValue = value; // Store the string (e.g., "one", "two")
+            // Hide the buttons and show the restart button during the game
+            document.getElementById('buttons-container').style.display = 'none';
+            document.getElementById('restartGame').style.display = 'inline-block';
+
+            // Stop any ongoing process if it was already running
+            if (processInterval) {
+                clearInterval(processInterval);
+            }
+
+            // Fetch the initial random array
             fetch('/random-array')
                 .then(response => response.json())
                 .then(data => {
                     currentArray = data.array;
                     displayArray(currentArray);
-                    document.getElementById('add1').disabled = false; // Enable the "Add 1" button
+
+                    // Start a process to add the chosen value to the array repetitively
+                    processInterval = setInterval(() => {
+                        addToArray();
+                    }, 1000); // Call backend every 1 second
                 })
                 .catch(error => {
                     console.error('Error fetching the array:', error);
                     document.getElementById('array').textContent = 'Error fetching the array!';
                 });
-        });
+        }
 
-        document.getElementById('add1').addEventListener('click', () => {
+        // Add the selected value to each element of the array
+        function addToArray() {
             if (currentArray) {
                 fetch('/add-one', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ array: currentArray })
+                    body: JSON.stringify({ array: currentArray, value: addValue })
                 })
                 .then(response => response.json())
                 .then(data => {
                     currentArray = data.array;
                     displayArray(currentArray);
+
+                    // Check if the game is over
+                    if (data.game_over) {
+                        clearInterval(processInterval); // Stop the interval
+                        document.getElementById('game-over').style.display = 'block'; // Show "Game Over"
+                        document.getElementById('restartGame').style.display = 'inline-block'; // Show restart button
+                    }
                 })
                 .catch(error => {
-                    console.error('Error adding 1 to the array:', error);
-                    document.getElementById('array').textContent = 'Error adding 1 to the array!';
+                    console.error('Error adding to the array:', error);
+                    document.getElementById('array').textContent = 'Error adding to the array!';
+                    clearInterval(processInterval); // Stop the interval if there's an error
                 });
             }
-        });
+        }
 
+        // Display the array on the frontend
         function displayArray(array) {
             const arrayDiv = document.getElementById('array');
             arrayDiv.innerHTML = ''; // Clear any previous array
@@ -80,6 +129,22 @@
                 arrayDiv.appendChild(rowDiv);
             });
         }
+
+        // Restart the game when the user clicks "Restart Game"
+        document.getElementById('restartGame').addEventListener('click', () => {
+            // Hide the "Game Over" message and the restart button
+            document.getElementById('game-over').style.display = 'none';
+            document.getElementById('restartGame').style.display = 'none';
+
+            // Show the "Add 1", "Add 2", "Add 3", "Add 4" buttons
+            document.getElementById('buttons-container').style.display = 'inline-block';
+        });
+
+        // Attach event listeners to the "Add 1", "Add 2", "Add 3", "Add 4" buttons
+        document.getElementById('best_move').addEventListener('click', () => handleAddButtonClick('best_move'));
+        document.getElementById('lookahead').addEventListener('click', () => handleAddButtonClick('lookahead'));
+        document.getElementById('nlookahead').addEventListener('click', () => handleAddButtonClick('nlookahead'));
+        document.getElementById('expectimax').addEventListener('click', () => handleAddButtonClick('expectimax'));
     </script>
 </body>
 </html>

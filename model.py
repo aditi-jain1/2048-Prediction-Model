@@ -9,7 +9,7 @@ N = 4
 DEPTH = 4
 def applyModel(grid, modelType, move_function, isGameOver_fucntion, weights=WEIGHTS):
     if modelType == "best_move":
-        return best_move(grid, weights, move_function, isGameOver_fucntion)
+        return best_move2(grid, weights, move_function, isGameOver_fucntion)
     if modelType == "lookahead":
         return best_move_with_lookahead(grid, weights, move_function)
     if modelType == "nlookahead":
@@ -30,7 +30,7 @@ def applyModel(grid, modelType, move_function, isGameOver_fucntion, weights=WEIG
             return move_map[random.choice(valid_moves)]
         return move_map[best_move]
 
-def best_move(grid, weights, move_function, isGameOver_function):
+def best_move2(grid, weights, move_function, isGameOver_function):
     moves = ['up', 'down', 'left', 'right']
     best_score = -10000
     best_direction = "up"
