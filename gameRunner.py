@@ -51,4 +51,4 @@ def gameloop_testing(gameType, modelType, weights):
 w1 = {'empty_tiles': 1, 'max_tile': 1.5, 'smoothness': 0.5, 'monotonicity': 1, 'corner_max': 0.5, 'merge_penalty': 1, 'snake_pattern': 0.5}
 w2 = {'empty_tiles': 1, 'max_tile': 1, 'smoothness': 1, 'monotonicity': 1, 'corner_max': 1, 'merge_penalty': 1, 'snake_pattern': 1}
 
-gameloop("ai", "expectimax")
+#gameloop("ai", "expectimax")

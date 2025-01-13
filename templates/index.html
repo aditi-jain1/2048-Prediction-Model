@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Array Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #array {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+        .array-row {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Random 4x4 Array Generator</h1>
+    <button id="getArray">Get Random 4x4 Array</button>
+    <button id="add1" disabled>Add 1 to Array</button>
+    <div id="array"></div>
+
+    <script>
+        let currentArray = null;
+
+        document.getElementById('getArray').addEventListener('click', () => {
+            fetch('/random-array')
+                .then(response => response.json())
+                .then(data => {
+                    currentArray = data.array;
+                    displayArray(currentArray);
+                    document.getElementById('add1').disabled = false; // Enable the "Add 1" button
+                })
+                .catch(error => {
+                    console.error('Error fetching the array:', error);
+                    document.getElementById('array').textContent = 'Error fetching the array!';
+                });
+        });
+
+        document.getElementById('add1').addEventListener('click', () => {
+            if (currentArray) {
+                fetch('/add-one', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ array: currentArray })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    currentArray = data.array;
+                    displayArray(currentArray);
+                })
+                .catch(error => {
+                    console.error('Error adding 1 to the array:', error);
+                    document.getElementById('array').textContent = 'Error adding 1 to the array!';
+                });
+            }
+        });
+
+        function displayArray(array) {
+            const arrayDiv = document.getElementById('array');
+            arrayDiv.innerHTML = ''; // Clear any previous array
+
+            // Loop through the 4x4 array and display it
+            array.forEach(row => {
+                const rowDiv = document.createElement('div');
+                rowDiv.classList.add('array-row');
+                rowDiv.textContent = row.join(' '); // Join the numbers in the row
+                arrayDiv.appendChild(rowDiv);
+            });
+        }
+    </script>
+</body>
+</html>
