@@ -12,7 +12,7 @@ WEIGHTS = {'empty_tiles': 1,
             'snake_pattern': 1}
 
 N = 4
-DEPTH = 3
+DEPTH = 4
 def applyModel(grid, modelType, move_function, isGameOver_fucntion):
     if modelType == "best_move":
         return best_move(grid, WEIGHTS, move_function, isGameOver_fucntion)
@@ -28,8 +28,9 @@ def applyModel(grid, modelType, move_function, isGameOver_fucntion):
             new_grid = move_function(test_grid, move)
             if new_grid != test_grid:
                 valid_moves.append(move)
+                print(valid_moves)
         if not valid_moves:
-            return 1
+            return random.choice([1, 2, 3, 4])
         best_move, _ = expectimax(grid, WEIGHTS, DEPTH, move_function, isGameOver_fucntion, True)
         if best_move is None:
             print("No move found by expectimax, choosing random valid move")
@@ -144,7 +145,7 @@ def expectimax(grid, weights, depth, move_function, isGameOver_function, is_play
                 best_score = score
                 best_move = move
         if best_move is None:
-            return None, float('-inf')
+            return None, -10000
         return best_move, best_score
     else:
         possibilities = get_all_possible_new_tiles(grid)

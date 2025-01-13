@@ -1,7 +1,7 @@
 import random
 import numpy as np
 from model import applyModel
-
+import copy
 def instantiateBoard():
     board = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
     for i in range(2):
@@ -22,6 +22,7 @@ def printBoard(board):
         print(str(row[0]) + "  " + str(row[1]) + "  " + str(row[2]) + "  " + str(row[3]))
 
 def move(board, direction):
+    board = copy.deepcopy(board)
     if direction == "left":
         return moveHelper(board)
     if direction == "up":
