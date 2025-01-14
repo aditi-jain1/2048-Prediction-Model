@@ -9,17 +9,80 @@
             font-family: Arial, sans-serif;
             text-align: center;
             margin-top: 50px;
+            background-color: #faf8ef; /* Light beige background */
+        }
+        h1 {
+            font-size: 60px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #fceabb, #f8b500);
+            color: transparent;
+            -webkit-background-clip: text;
+            margin-bottom: 20px;
         }
         button {
-            padding: 10px 20px;
+            padding: 12px 20px;
             font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            margin: 10px;
             cursor: pointer;
+            border: none;
+            transition: transform 0.2s ease, background-color 0.3s ease;
+        }
+        button:hover {
+            transform: scale(1.1);
+        }
+        #best_move {
+            background-color: #4CAF50; /* Green */
+            color: white;
+        }
+        #lookahead {
+            background-color: #008CBA; /* Blue */
+            color: white;
+        }
+        #nlookahead {
+            background-color: #f44336; /* Red */
+            color: white;
+        }
+        #expectimax {
+            background-color: #ff9800; /* Orange */
+            color: white;
         }
         #array {
             margin-top: 20px;
-            font-size: 18px;
+            display: grid;
+            grid-template-columns: repeat(4, 100px);
+            grid-gap: 10px;
+            justify-content: center;
+            padding: 10px;
+            border-radius: 10px;
         }
+        .array-cell {
+            width: 100px;
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            border-radius: 10px;
+            color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .cell-2 { background-color: #eee4da; }
+        .cell-4 { background-color: #ede0c8; }
+        .cell-8 { background-color: #f2b179; }
+        .cell-16 { background-color: #f59563; }
+        .cell-32 { background-color: #f67c5f; }
+        .cell-64 { background-color: #f65e3b; }
+        .cell-128 { background-color: #edcf72; }
+        .cell-256 { background-color: #edcc61; }
+        .cell-512 { background-color: #edc850; }
+        .cell-1024 { background-color: #edc53f; }
+        .cell-2048 { background-color: #edc22e; }
         .array-row {
+            display: flex;
+            justify-content: space-between;
             margin-bottom: 10px;
         }
         #game-over {
@@ -33,6 +96,16 @@
         #restartGame {
             display: none;
             margin-top: 20px;
+            font-size: 18px;
+            padding: 10px 25px;
+            background-color: #ff5722; /* Bright Red */
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        #restartGame:hover {
+            transform: scale(1.1);
         }
     </style>
 </head>
@@ -58,7 +131,7 @@
 
         // Function to handle the button click for adding 1, 2, 3, or 4
         function handleAddButtonClick(value) {
-            addValue = value; // Store the string (e.g., "one", "two")
+            addValue = value; // Store the string (e.g., "best_move", "lookahead")
             // Hide the buttons and show the restart button during the game
             document.getElementById('buttons-container').style.display = 'none';
             document.getElementById('restartGame').style.display = 'inline-block';
@@ -78,7 +151,7 @@
                     // Start a process to add the chosen value to the array repetitively
                     processInterval = setInterval(() => {
                         addToArray();
-                    }, 1000); // Call backend every 1 second
+                    }, 500); // Call backend every 1 second
                 })
                 .catch(error => {
                     console.error('Error fetching the array:', error);
@@ -121,12 +194,15 @@
             const arrayDiv = document.getElementById('array');
             arrayDiv.innerHTML = ''; // Clear any previous array
 
-            // Loop through the 4x4 array and display it
+            // Loop through the 4x4 array and display it as cells
             array.forEach(row => {
-                const rowDiv = document.createElement('div');
-                rowDiv.classList.add('array-row');
-                rowDiv.textContent = row.join(' '); // Join the numbers in the row
-                arrayDiv.appendChild(rowDiv);
+                row.forEach(cell => {
+                    const cellDiv = document.createElement('div');
+                    cellDiv.classList.add('array-cell');
+                    cellDiv.classList.add('cell-' + cell);  // Dynamically add the class based on the number
+                    cellDiv.textContent = cell === 0 ? '' : cell;  // Display nothing for empty cells (0)
+                    arrayDiv.appendChild(cellDiv);
+                });
             });
         }
 
@@ -140,7 +216,7 @@
             document.getElementById('buttons-container').style.display = 'inline-block';
         });
 
-        // Attach event listeners to the "Add 1", "Add 2", "Add 3", "Add 4" buttons
+        // Attach event listeners to the "Best Move", "Lookahead", "N Lookahead", "Expectimax" buttons
         document.getElementById('best_move').addEventListener('click', () => handleAddButtonClick('best_move'));
         document.getElementById('lookahead').addEventListener('click', () => handleAddButtonClick('lookahead'));
         document.getElementById('nlookahead').addEventListener('click', () => handleAddButtonClick('nlookahead'));

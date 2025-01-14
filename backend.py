@@ -22,7 +22,7 @@ def add_one():
     board = data.get('array', [])
     value = data.get('value')
     
-    if max([max(row) for row in board]) == 16:
+    if isGameOver(board):
         return jsonify({'game_over': True, 'array': board})
 
     next_move = getModelInput(board, value)
